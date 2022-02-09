@@ -1,6 +1,8 @@
 from functools import lru_cache
 import sys
 import pprint
+from random import shuffle
+from collections import defaultdict
 
 sys.setrecursionlimit(10**9)
 
@@ -16,6 +18,8 @@ C = 0
 
 clients=[]
 ingredient = set()
+
+ingredient_freq = defaultdict(lambda:{'l':0,'d':0})
 
 @lru_cache
 def score(ingredients):
@@ -48,7 +52,7 @@ def maximise(ingredients):
         return 0, ()
     max_score = score(ingredients), ingredients[:]
 
-    if max_score[0]>500: #target score
+    if max_score[0]>1000: #target score
         return max_score
 
     for i in range(len(ingredients)):
@@ -71,24 +75,42 @@ for file in files:
 
     clients=[]
     ingredient = set()
+    ingredient_freq = defaultdict(lambda:{'l':0,'d':0})
 
     for _ in range(C):
         preference =[]
         
         like = input().split()
         dislike = input().split()
+
         if len(like)>1:
-            preference.append(like[1:])
-            ingredient = ingredient.union(set(like[1:]))
+            like = like[1:]
         else:
-            preference.append([])
-        if len(dislike)>1:
-            preference.append(dislike[1:])
-            ingredient = ingredient.union(set(dislike[1:]))
-        else:
-            preference.append([])
+            like = []
+
+        for l in like:
+            ingredient_freq[l]['l'] += 1
+            ingredient.add(l)
+
+        preference.append(like)
         
+        if len(dislike)>1:
+            dislike = dislike[1:]
+            
+        else:
+            dislike = []
+
+        for d in dislike:
+            ingredient_freq[d]['d'] += 1
+            ingredient.add(d)
+        
+        preference.append(dislike)
         clients.append(preference)
+
+    #heuristic
+    for ing in ingredient_freq.keys():
+        if ingredient_freq[ing]['l']<ingredient_freq[ing]['d']:
+            ingredient.remove(ing)
 
     ingredient = tuple(ingredient)
 
